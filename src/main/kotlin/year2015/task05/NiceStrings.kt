@@ -42,10 +42,9 @@ fun String.indexOf(pattern: Pattern): Int? {
 
 fun main(args: Array<String>) {
     println(
-            Files.lines(Paths.get(ClassLoader.getSystemResource("year2015/task04/input.txt").toURI()))
+            Files.lines(Paths.get(ClassLoader.getSystemResource("year2015/task05/input.txt").toURI()))
                     .map(String::trim)
                     .filter(String::isNice)
-                    .peek(::println)
                     .count()
     )
 }
