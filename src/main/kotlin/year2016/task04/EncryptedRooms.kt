@@ -1,5 +1,6 @@
 package year2016.task04
 
+import common.countChars
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
@@ -7,13 +8,6 @@ import java.util.*
 data class EncryptedRoom(val encryptedGame: List<String>,
                          val id: Int,
                          val checksum: String)
-
-fun String.countChars(): Map<Char, Int> {
-    fun Map<Char, Int>.count(char: Char): Map<Char, Int> {
-        return plus(char to (1 + (get(char) ?: 0)))
-    }
-    return fold(emptyMap(), Map<Char, Int>::count)
-}
 
 fun List<String>.checkSum(): String {
     return reduce(String::plus).countChars().entries.sortedWith(Comparator { p1, p2 ->
