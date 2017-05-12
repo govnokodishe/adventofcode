@@ -91,6 +91,7 @@ fun toRelations(signalProvider: SignalProvider, wire: Wire): Set<Relation> {
 }
 
 fun Map<Wire, SignalProvider>.toRelations(): Set<Relation> {
-    return entries.map { e -> toRelations(e.value, e.key) }
-            .reduce(Set<Relation>::plus)
+    return entries
+            .map { e -> toRelations(e.value, e.key) }
+            .reduce { acc1, acc2 -> acc1.plus(acc2) }
 }

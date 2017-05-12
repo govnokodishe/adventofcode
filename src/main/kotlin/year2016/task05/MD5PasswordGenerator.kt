@@ -10,5 +10,5 @@ fun generatePassword(id: String, size: Long): String {
 }
 
 fun main(args: Array<String>) {
-    println(generatePassword("abbhdwsy", 8))
+    println(generatePassword("ugkcyxxp", 8))
 }
