@@ -11,7 +11,7 @@ import java.util.stream.Stream
 data class Display private constructor(val width: Int,
                                        val height: Int,
                                        val lights: Map<Position, LightState>) {
-    constructor(width: Int, height: Int) : this(width, height, (0..width - 1).flatMap(0..height - 1).map { it to OFF }.toMap())
+    constructor(width: Int, height: Int) : this(width, height, (0 until width).flatMap(0 until height).map { it to OFF }.toMap())
 
     fun execute(command: DisplayCommand): Display {
         val newLights: MutableMap<Position, LightState> = HashMap(lights)
@@ -24,6 +24,13 @@ data class Display private constructor(val width: Int,
 
 fun IntRange.flatMap(range: IntRange): Iterable<Position> {
     return this.flatMap { x -> (range).map { y -> Position(x, y) } }
+}
+
+class PositionsInRect(height: Int, width: Int): Iterable<Position> {
+    private val positions: Iterable<Position> by lazy { (0 until height).flatMap(0 until width) }
+    override fun iterator(): Iterator<Position> {
+        return positions.iterator()
+    }
 }
 
 fun LightState.afterCommand(command: LightStateCommand): LightState {
