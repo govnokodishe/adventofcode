@@ -24,13 +24,14 @@ fun ByteArray.toHex(): String {
     return Hex.encodeHexString(this)
 }
 
-fun getFirstNHashesStartsWithFiveZeros(key: String, n: Long): Stream<Pair<Long,String>> {
+fun getFirstNHashesStartsWithZeros(key: String, n: Long, zerosCount: Int): Stream<Pair<Long,String>> {
+    val zeros = "0".repeat(zerosCount)
     return LongStream.iterate(0) { it + 1 }
             .mapToObj { it to MD5Hasher.hash((key + it.toString())).toHex() }
-            .filter { it.second.startsWith("00000") }
+            .filter { it.second.startsWith(zeros) }
             .limit(n)
 }
 
-fun getFirstHashStartsWithFiveZeros(key: String): Pair<Long,String> {
-    return getFirstNHashesStartsWithFiveZeros(key, 1).findAny().get()
+fun getFirstHashStartsWithZeros(key: String, zerosCount: Int): Pair<Long,String> {
+    return getFirstNHashesStartsWithZeros(key, 1, zerosCount).findAny().get()
 }

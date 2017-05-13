@@ -88,7 +88,7 @@ fun String.parseDisplayCommand(): DisplayCommand {
 }
 
 fun <T> Stream<T>.toObservable(): Observable<T> {
-    return Observable.from(Iterable { this.iterator() })
+    return Observable.from(Iterable(this::iterator))
 }
 
 fun main(args: Array<String>) {

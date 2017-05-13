@@ -1,10 +1,10 @@
 package year2016.task05
 
-import common.getFirstNHashesStartsWithFiveZeros
+import common.getFirstNHashesStartsWithZeros
 import java.util.stream.Collectors.joining
 
 fun generatePassword(id: String, size: Long): String {
-    return getFirstNHashesStartsWithFiveZeros(id, size)
+    return getFirstNHashesStartsWithZeros(id, size, 5)
             .map { it.second[5].toString() }
             .collect(joining())
 }
