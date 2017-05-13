@@ -1,17 +1,31 @@
 package year2015.task06
 
+import common.IOUtils
 import common.Position
-import rx.Observable
 import year2015.task06.LightState.OFF
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.util.*
-import java.util.stream.Stream
 
-data class Display private constructor(val width: Int,
-                                       val height: Int,
-                                       val lights: Map<Position, LightState>) {
-    constructor(width: Int, height: Int) : this(width, height, (0 until width).flatMap(0 until height).map { it to OFF }.toMap())
+class Display private constructor(private val width: Int,
+                                  private val height: Int,
+                                  private val lights: Map<Position, LightState>) {
+    constructor(width: Int, height: Int) : this(width,
+                                                height,
+                                                (0 until width).flatMap(0 until height).map { it to OFF }.toMap())
+
+    companion object {
+        private fun LightState.afterCommand(command: LightStateCommand): LightState {
+            return when (command) {
+                LightStateCommand.TURN_ON -> LightState.ON
+                LightStateCommand.TURN_OFF -> LightState.OFF
+                LightStateCommand.TOGGLE -> when (this) {
+                    LightState.ON -> LightState.OFF
+                    LightState.OFF -> LightState.ON
+                }
+            }
+        }
+    }
+
+    fun turnedOnPixelsCount(): Int = lights.values.count { lightState -> LightState.ON == lightState }
 
     fun execute(command: DisplayCommand): Display {
         val newLights: MutableMap<Position, LightState> = HashMap(lights)
@@ -19,6 +33,36 @@ data class Display private constructor(val width: Int,
             newLights.put(pos, lights[pos]?.afterCommand(command.lightStateCommand) ?: throw IndexOutOfBoundsException("Display size is ($width,$height), but command for (${pos.x},${pos.y}) was given"))
         }
         return Display(width, height, newLights)
+    }
+}
+
+class DisplayWithBrightness private constructor(val width: Int,
+                                                val height: Int,
+                                                val lights: Map<Position, Int>) {
+    constructor(width: Int, height: Int) : this(width,
+                                                height,
+                                                (0 until width).flatMap(0 until height).map { it to 0 }.toMap())
+
+    companion object {
+        private fun Int.afterCommand(lightStateCommand: LightStateCommand): Int = when (lightStateCommand) {
+            LightStateCommand.TURN_ON -> this + 1
+            LightStateCommand.TURN_OFF -> when (this) {
+                0 -> 0
+                else -> this - 1
+            }
+            LightStateCommand.TOGGLE -> this + 2
+        }
+    }
+
+    fun totalBrightness(): Int = lights.values.sum()
+
+    fun execute(command: DisplayCommand): DisplayWithBrightness {
+        val newLights: MutableMap<Position, Int> = HashMap(lights)
+        (command.startPosition.x..command.endPosition.x).flatMap(command.startPosition.y..command.endPosition.y).forEach { pos ->
+            newLights.put(pos,
+                          lights[pos]?.afterCommand(command.lightStateCommand) ?: throw IndexOutOfBoundsException("Display size is ($width,$height), but command for (${pos.x},${pos.y}) was given"))
+        }
+        return DisplayWithBrightness(width, height, newLights)
     }
 }
 
@@ -30,17 +74,6 @@ class PositionsInRect(height: Int, width: Int): Iterable<Position> {
     private val positions: Iterable<Position> by lazy { (0 until height).flatMap(0 until width) }
     override fun iterator(): Iterator<Position> {
         return positions.iterator()
-    }
-}
-
-fun LightState.afterCommand(command: LightStateCommand): LightState {
-    return when (command) {
-        LightStateCommand.TURN_ON -> LightState.ON
-        LightStateCommand.TURN_OFF -> LightState.OFF
-        LightStateCommand.TOGGLE -> when (this) {
-            LightState.ON -> LightState.OFF
-            LightState.OFF -> LightState.ON
-        }
     }
 }
 
@@ -87,18 +120,23 @@ fun String.parseDisplayCommand(): DisplayCommand {
     } ?: throw IllegalArgumentException("Unexpected beginning of the command")
 }
 
-fun <T> Stream<T>.toObservable(): Observable<T> {
-    return Observable.from(Iterable(this::iterator))
-}
-
 fun main(args: Array<String>) {
-    Files.lines(Paths.get(ClassLoader.getSystemResource("year2015/task06/input.txt").toURI()))
-            .map(String::trim)
-            .map(String::parseDisplayCommand)
-            .toObservable()
-            .reduce(Display(1000, 1000), Display::execute)
-            .first().toSingle()
-            .subscribe { display ->
-                println(display.lights.values.count { it == LightState.ON })
-            }
+    IOUtils.useLinesFromResource("/year2015/task06/input.txt") { lines ->
+        println(
+                lines
+                        .map(String::trim)
+                        .map(String::parseDisplayCommand)
+                        .fold(Display(1000, 1000), Display::execute)
+                        .turnedOnPixelsCount()
+        )
+    }
+    IOUtils.useLinesFromResource("/year2015/task06/input.txt") { lines ->
+        println(
+                lines
+                        .map(String::trim)
+                        .map(String::parseDisplayCommand)
+                        .fold(DisplayWithBrightness(1000, 1000), DisplayWithBrightness::execute)
+                        .totalBrightness()
+        )
+    }
 }
